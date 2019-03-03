@@ -15,5 +15,5 @@ deploy:
   - target/release/makemd-rs.exe
   skip_cleanup: true
   on:
-    repo: Eonm/csl-to-markdown
+    repo: Eonm/makemd-rs
 tags: true
