@@ -1,0 +1,21 @@
+[package]
+name = "document-builder-rs"
+version = "0.1.0"
+authors = ["eonm <eon.mathis@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+reqwest="*"
+tempdir="*"
+zip="*"
+glob="*"
+dotenv="*"
+envy="*"
+serde="*"
+serde_derive="*"
+log="*"
+env_logger="*"
+clap="*"
+
+[profile.release]
+opt-level = 3
