@@ -9,9 +9,9 @@ pub fn pandoc(args: Vec<String>) {
         .args(args)
         .output()
         .expect("failed to execute pandoc");
-    
+
     if !pandoc.stderr.is_empty() {
-        error!("{}", String::from_utf8_lossy(&pandoc.stderr));
+        panic!("{}", String::from_utf8_lossy(&pandoc.stderr));
     }
 }
 
