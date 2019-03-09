@@ -15,38 +15,38 @@ pub fn pandoc(args: Vec<String>) {
     }
 }
 
-pub fn create_pandoc_config(data: &Document)-> Vec<String> {
+pub fn create_pandoc_config(data: &Document, input: &str)-> Vec<String> {
     match &data.document_type {
         DocumentType::PDF => {
-            create_pandoc_args(data.clone(), Some(vec!["--toc"]))
+            create_pandoc_args(data.clone(), input, Some(vec!["--toc"]))
         }
         DocumentType::PRESENTATION => {
-            create_pandoc_args(data.clone(), Some(vec!["-t", "revealjs", "-V", "revealjs-url=./reveal.js-master"]))
+            create_pandoc_args(data.clone(), input, Some(vec!["-t", "revealjs", "-V", "revealjs-url=./reveal.js-master"]))
         }
     }
 }
 
-fn file_output_name(data: &Document) -> String {
-    let config_file = data.inputs.last();
-    let filename = match config_file {
-        Some(file) => util::get_filename(file).unwrap_or("no_filename".to_string()),
-        None => "no_filename".to_string()
-    };
+fn file_output_name(data: &Document, input: &str) -> String {
+    let filename = util::get_filename(input).unwrap_or("no_filename".to_string());
 
     match data.document_type {
         DocumentType::PDF => format!("{}{}.pdf", data.output, filename),
         DocumentType::PRESENTATION => format!("{}{}.html", data.output, filename)
     }
-
 }
 
-pub fn create_pandoc_args(data: &Document, extra_args:Option<Vec<&str>>) -> Vec<String> {
+pub fn create_pandoc_args(data: &Document, input: &str, extra_args:Option<Vec<&str>>) -> Vec<String> {
     let mut config = vec!();
     config.append(&mut vec!("-N", "-s"));
-    config.append(&mut data.inputs.iter().filter(|input| input.ends_with(".md")).map(|x| x.as_ref()).collect());
-    config.push(&data.config);
 
-    let output_name = &file_output_name(&data);
+    if input.ends_with(".yml") {
+        config.append(&mut data.inputs.iter().filter(|input| input.ends_with(".md")).map(|x| x.as_ref()).collect());
+        config.push(&data.config);
+    } else {
+        config.push(input);
+    }
+
+    let output_name = &file_output_name(&data, input);
     config.append(&mut vec!["-o", output_name]);
 
     match extra_args {
@@ -91,7 +91,7 @@ mod tests {
                 z_group_collection: None
             }
         };
-        let pandoc_args = create_pandoc_args(&document_struct, None);
+        let pandoc_args = create_pandoc_args(&document_struct, &document_struct.config, None);
         assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
     }
 
@@ -114,7 +114,7 @@ mod tests {
                 z_group_collection: None
             }
         };
-        let pandoc_args = create_pandoc_args(&document_struct, None);
+        let pandoc_args = create_pandoc_args(&document_struct, &document_struct.config, None);
         assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf", "--filter", "pandoc-citeproc", "--bibliography", "bib.bib", "--csl", "style.bib"))
     }
 
@@ -137,7 +137,7 @@ mod tests {
                 z_group_collection: None
             }
         };
-        let pandoc_args = create_pandoc_args(&document_struct, None);
+        let pandoc_args = create_pandoc_args(&document_struct, &document_struct.config, None);
         assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
     }
 
@@ -160,7 +160,7 @@ mod tests {
                 z_group_collection: None
             }
         };
-        let pandoc_args = create_pandoc_args(&document_struct, None);
+        let pandoc_args = create_pandoc_args(&document_struct, &document_struct.config, None);
         assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
     }
 
@@ -184,8 +184,7 @@ mod tests {
             }
         };
         let extra_args = Some(vec!("extra", "args"));
-        let pandoc_args = create_pandoc_args(&document_struct, extra_args);
+        let pandoc_args = create_pandoc_args(&document_struct, &document_struct.config, extra_args);
         assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf", "extra", "args", "--filter", "pandoc-citeproc", "--bibliography", "bib.bib", "--csl", "style.bib"))
     }
-
 }

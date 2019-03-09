@@ -7,7 +7,7 @@ use std::path::Path;
 
 mod zotero;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Bibliography {
     pub csl_file: Option<String>,
     pub csl_style: Option<String>,

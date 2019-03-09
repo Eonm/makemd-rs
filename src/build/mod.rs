@@ -9,7 +9,9 @@ use crate::unzip;
 
 extern crate serde_derive;
 
-#[derive(Debug)]
+use std::thread;
+
+#[derive(Debug, Clone)]
 pub enum DocumentType {
     PDF,
     PRESENTATION
@@ -57,7 +59,8 @@ pub trait Build {
 //-----------------------------------------------------------------------------
 // Document
 //-----------------------------------------------------------------------------
-#[derive(Debug)]
+// #[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct  Document {
     pub document_type: DocumentType,
     pub inputs: Vec<String>,
@@ -97,22 +100,36 @@ impl Build for Document {
             true => ()
         };
         util::mkdir_all(&self.output);
+
+        let self_copy = self.clone();
+        let t1 = thread::spawn(move || {
+            download_revealjs(&self_copy);
+        });
+
         self.bibliography.download_bibliography();
         self.bibliography.download_csl_file();
-        download_revealjs(&self)
+        t1.join();
     }
 
     fn build(&self) {
         self.before_build();
-        let pandoc_config = pandoc::create_pandoc_config(self);
+        let pandoc_config = pandoc::create_pandoc_config(self, &self.config);
         pandoc::pandoc(pandoc_config.to_vec());
     }
 
     fn build_individually (&self) {
         self.before_build();
-        for _file in self.inputs.iter() {
-            let pandoc_config = pandoc::create_pandoc_config(self);
-            pandoc::pandoc(pandoc_config.to_vec());
+        let mut pandoc_workers = vec!();
+        for file in self.inputs.iter() {
+            let pandoc_config = pandoc::create_pandoc_config(self, &file);
+            let t = thread::spawn(move || {
+                pandoc::pandoc(pandoc_config.to_vec());
+            });
+            pandoc_workers.push(t)
+        }
+
+        for child in pandoc_workers {
+            let _ = child.join();
         }
     }
 }
