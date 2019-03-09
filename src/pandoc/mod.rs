@@ -18,10 +18,10 @@ pub fn pandoc(args: Vec<String>) {
 pub fn create_pandoc_config(data: &Document, input: &str)-> Vec<String> {
     match &data.document_type {
         DocumentType::PDF => {
-            create_pandoc_args(data.clone(), input, Some(vec!["--toc"]))
+            create_pandoc_args(&data.clone(), input, Some(vec!["--toc"]))
         }
         DocumentType::PRESENTATION => {
-            create_pandoc_args(data.clone(), input, Some(vec!["-t", "revealjs", "-V", "revealjs-url=./reveal.js-master"]))
+            create_pandoc_args(&data.clone(), input, Some(vec!["-t", "revealjs", "-V", "revealjs-url=./reveal.js-master"]))
         }
     }
 }
