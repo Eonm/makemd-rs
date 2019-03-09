@@ -15,34 +15,39 @@ pub fn pandoc(args: Vec<String>) {
     }
 }
 
-pub fn create_pandoc_config(data: &Document, input_file: &str)-> Vec<String> {
-
-    let input_files : Vec<String> = if input_file.ends_with(".md") {
-        vec![input_file.to_string()]
-    } else {
-        data.inputs.clone()
-    };
-
-    let output_filename = util::get_filename(input_file); //withouth ext
-
+pub fn create_pandoc_config(data: &Document)-> Vec<String> {
     match &data.document_type {
         DocumentType::PDF => {
-            let output = format!("{}{}.pdf", data.output, output_filename);
-            create_pandoc_args(data.clone(), input_files, &output, None)
+            create_pandoc_args(data.clone(), Some(vec!["--toc"]))
         }
         DocumentType::PRESENTATION => {
-            let output = format!("{}{}.html", data.output, output_filename);
-            create_pandoc_args(data.clone(), input_files, &output, Some(vec!["-t", "revealjs", "-V", "revealjs-url=./reveal.js-master"]))
+            create_pandoc_args(data.clone(), Some(vec!["-t", "revealjs", "-V", "revealjs-url=./reveal.js-master"]))
         }
     }
 }
 
-pub fn create_pandoc_args(data: &Document, inputs: Vec<String>, output: &str, extra_args:Option<Vec<&str>>) -> Vec<String> {
+fn file_output_name(data: &Document) -> String {
+    let config_file = data.inputs.last();
+    let filename = match config_file {
+        Some(file) => util::get_filename(file).unwrap_or("no_filename".to_string()),
+        None => "no_filename".to_string()
+    };
+
+    match data.document_type {
+        DocumentType::PDF => format!("{}{}.pdf", data.output, filename),
+        DocumentType::PRESENTATION => format!("{}{}.html", data.output, filename)
+    }
+
+}
+
+pub fn create_pandoc_args(data: &Document, extra_args:Option<Vec<&str>>) -> Vec<String> {
     let mut config = vec!();
-    config.append(&mut vec!("--toc", "-N", "-s"));
-    config.append(&mut inputs.iter().map(|x| x.as_ref()).collect());
+    config.append(&mut vec!("-N", "-s"));
+    config.append(&mut data.inputs.iter().filter(|input| input.ends_with(".md")).map(|x| x.as_ref()).collect());
     config.push(&data.config);
-    config.append(&mut vec!["-o", output]);
+
+    let output_name = &file_output_name(&data);
+    config.append(&mut vec!["-o", output_name]);
 
     match extra_args {
         Some(mut args) => config.append(&mut args),
@@ -55,4 +60,132 @@ pub fn create_pandoc_args(data: &Document, inputs: Vec<String>, output: &str, ex
     };
 
     config.iter().map(|elem| elem.to_string()).collect::<Vec<String>>()
+}
+
+//-----------------------------------------------------------------------------
+// Test
+//-----------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use crate::build;
+    use crate::bibliography;
+    use super::*;
+
+    #[test]
+    fn creating_pandoc_args_no_bib() {
+        let document_struct = build::Document {
+            document_type: DocumentType::PDF,
+            inputs: vec!("md.md".to_string()),
+            output: "pdf/".to_string(),
+            config: "pdf.yml".to_string(),
+            bibliography: bibliography::Bibliography {
+                csl_file: None,
+                csl_style: None,
+                bib_dest: None,
+                bib_src: None,
+                z_user_id: None,
+                z_group_id: None,
+                z_api_key: None,
+                z_collection: None,
+                z_group_collection: None
+            }
+        };
+        let pandoc_args = create_pandoc_args(&document_struct, None);
+        assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
+    }
+
+    #[test]
+    fn creating_pandoc_args_bib() {
+        let document_struct = build::Document {
+            document_type: DocumentType::PDF,
+            inputs: vec!("md.md".to_string()),
+            output: "pdf/".to_string(),
+            config: "pdf.yml".to_string(),
+            bibliography: bibliography::Bibliography {
+                csl_file: Some("style.bib".to_string()),
+                csl_style: None,
+                bib_dest: Some("bib.bib".to_string()),
+                bib_src: None,
+                z_user_id: None,
+                z_group_id: None,
+                z_api_key: None,
+                z_collection: None,
+                z_group_collection: None
+            }
+        };
+        let pandoc_args = create_pandoc_args(&document_struct, None);
+        assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf", "--filter", "pandoc-citeproc", "--bibliography", "bib.bib", "--csl", "style.bib"))
+    }
+
+    #[test]
+    fn creating_pandoc_args_incomplet_bib() {
+        let document_struct = build::Document {
+            document_type: DocumentType::PDF,
+            inputs: vec!("md.md".to_string()),
+            output: "pdf/".to_string(),
+            config: "pdf.yml".to_string(),
+            bibliography: bibliography::Bibliography {
+                csl_file: Some("style.bib".to_string()),
+                csl_style: None,
+                bib_dest: None,
+                bib_src: None,
+                z_user_id: None,
+                z_group_id: None,
+                z_api_key: None,
+                z_collection: None,
+                z_group_collection: None
+            }
+        };
+        let pandoc_args = create_pandoc_args(&document_struct, None);
+        assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
+    }
+
+    #[test]
+    fn creating_pandoc_args_incomplet_csl() {
+        let document_struct = build::Document {
+            document_type: DocumentType::PDF,
+            inputs: vec!("md.md".to_string()),
+            output: "pdf/".to_string(),
+            config: "pdf.yml".to_string(),
+            bibliography: bibliography::Bibliography {
+                csl_file: None,
+                csl_style: None,
+                bib_dest: Some("bib.bib".to_string()),
+                bib_src: None,
+                z_user_id: None,
+                z_group_id: None,
+                z_api_key: None,
+                z_collection: None,
+                z_group_collection: None
+            }
+        };
+        let pandoc_args = create_pandoc_args(&document_struct, None);
+        assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
+    }
+
+    #[test]
+    fn creating_pandoc_extra_args() {
+        let document_struct = build::Document {
+            document_type: DocumentType::PDF,
+            inputs: vec!("md.md".to_string()),
+            output: "pdf/".to_string(),
+            config: "pdf.yml".to_string(),
+            bibliography: bibliography::Bibliography {
+                csl_file: Some("style.bib".to_string()),
+                csl_style: None,
+                bib_dest: Some("bib.bib".to_string()),
+                bib_src: None,
+                z_user_id: None,
+                z_group_id: None,
+                z_api_key: None,
+                z_collection: None,
+                z_group_collection: None
+            }
+        };
+        let extra_args = Some(vec!("extra", "args"));
+        let pandoc_args = create_pandoc_args(&document_struct, extra_args);
+        assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf", "extra", "args", "--filter", "pandoc-citeproc", "--bibliography", "bib.bib", "--csl", "style.bib"))
+    }
+
 }

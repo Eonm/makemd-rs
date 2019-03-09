@@ -4,6 +4,9 @@ mod pandoc;
 mod util;
 mod download;
 mod unzip;
+mod file_system;
+mod defaultconfig;
+mod newproject;
 use crate::build::EnvData;
 use crate::build::Build;
 
@@ -20,9 +23,10 @@ extern crate dotenv;
 extern crate clap;
 use clap::{Arg, App, SubCommand};
 
-
 fn main() {
+    defaultconfig::set_default_config();
     env_logger::init();
+
     let matches = App::new("MakeMD")
                           .version("0.1.0")
                           .author("Eonm <eon.mathis@gmail.com>")
@@ -50,44 +54,91 @@ fn main() {
                                   .long("update-csl")
                                   .help("Update citation style file")
                                   .takes_value(false)))
+                              .subcommand(SubCommand::with_name("init")
+                                .arg(Arg::with_name("new")
+                                   .long("new")
+                                   .short("n")
+                                   .help("Create a new project")
+                                   .takes_value(false))
+                               .arg(Arg::with_name("force")
+                                  .long("force")
+                                  .help("Force to create a porject")
+                                  .takes_value(false)))
                             .subcommand(SubCommand::with_name("lint")
                               ).get_matches();
 
 // Build-----------------------------------------------------------------------
     if let Some(matches) = matches.subcommand_matches("build") {
-        dotenv::dotenv().expect("Failed to read .env file");
-        let env_data = envy::from_env::<EnvData>().expect("failed to parse .env file");
+        load_env_file();
+        let env_data = envy::from_env::<EnvData>().expect("failed to parse .makemd file");
         if matches.is_present("pdf") {
-            println!("Building pdf");
             let pdf = build::Document::new(env_data, build::DocumentType::PDF);
             if matches.is_present("individually") {
                 pdf.build_individually();
+                println!("PDFs builded");
             } else {
                 pdf.build();
+                println!("PDF builded");
             }
+
         } else if matches.is_present("presentation") {
-            println!("Building presentation");
             let presentation = build::Document::new(env_data, build::DocumentType::PRESENTATION);
             if matches.is_present("individually") {
                 presentation.build_individually();
+                println!("Presentations builded");
             } else {
                 presentation.build();
+                println!("Presentation builded");
             }
         }
     };
 
 // Maintenance-----------------------------------------------------------------
+
+
     if let Some(matches) = matches.subcommand_matches("maintenance") {
-        dotenv::dotenv().expect("Failed to read .env file");
-        let env_data = envy::from_env::<EnvData>().expect("failed to parse .env file");
+        load_env_file();
+        let env_data = envy::from_env::<EnvData>().expect("Failed to parse .makemd file");
         if matches.is_present("bibliography") {
-            println!("Updating bibliography");
             bibliography::Bibliography::new(env_data).download_bibliography_force();
+            println!("Bibliography updated");
         } else if matches.is_present("csl") {
             bibliography::Bibliography::new(env_data).download_csl_file_force();
+            println!("Csl file udpated");
+        }
+    };
+
+// Init------------------------------------------------------------------------
+    if let Some(matches) = matches.subcommand_matches("init") {
+        if matches.is_present("new") {
+            match dotenv::from_filename(".makemd") {
+                Ok (env) => {
+                    if matches.is_present("force") {
+                        newproject::init_project();
+                        println!("Project created");
+                    } else {
+                        println!("You are already in a makemd project : {}", env.display());
+                    }
+                },
+                Err(_e) =>  {
+                    newproject::init_project();
+                    println!("Project created");
+                }
+            }
         }
     };
 
 // Lint------------------------------------------------------------------------
 
+}
+
+use std::process;
+fn load_env_file() {
+    match dotenv::from_filename(".makemd") {
+        Err(_e) => {
+            eprintln!("\nYou aren't in a MakeMD project (Failed to read .makemd file)\nTry to init a project first");
+            process::exit(1);
+        },
+        Ok(data) => data
+    };
 }

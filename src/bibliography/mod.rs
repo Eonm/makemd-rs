@@ -58,7 +58,7 @@ impl Bibliography {
                 }
             },
             _ => {
-                eprintln!("Not enough data to download your .csl file. Check your .env file");
+                eprintln!("Not enough data to download your .csl file. Check your .makemd file");
                 process::exit(1)
             },
         }
@@ -82,7 +82,7 @@ impl Bibliography {
                 let destination = match &self.bib_dest {
                     Some(data) => data,
                     None => {
-                        eprintln!("BIBLIOGRAPHY variable is empty. Check your .env file");
+                        eprintln!("BIBLIOGRAPHY variable is empty. Check your .makemd file");
                         process::exit(1)
                     }
                 };
@@ -98,7 +98,7 @@ impl Bibliography {
                 }
             },
             None => {
-                eprintln!("Not enough data to download your .bib file. Check your .env file");
+                eprintln!("Not enough data to download your .bib file. Check your .makemd file");
                 process::exit(1)
             }
         }
@@ -132,7 +132,7 @@ pub fn parse_csl_error (response: &mut reqwest::Response) {
     let text = response.text().unwrap();
     match text.as_ref() {
         "404: Not Found\n" => {
-            eprintln!("Bad csl filename");
+            eprintln!("Invalid csl filename");
             process::exit(1)
         }
         _ => panic!("CSL : an error occurred"),

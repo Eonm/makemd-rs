@@ -6,7 +6,6 @@ use glob::glob;
 
 use std::fs::File;
 use std::io::Read;
-use std::process;
 
 
 pub fn get_input_files(path: &str) -> Vec<String> {
@@ -14,11 +13,10 @@ pub fn get_input_files(path: &str) -> Vec<String> {
     glob(&pattern).expect("failed to get globals").filter_map(Result::ok).map(|p| p.display().to_string()).collect()
 }
 
-pub fn get_filename (document_path: &str) -> String {
+pub fn get_filename (document_path: &str) -> Option<String> {
     let mut file = match File::open(document_path) {
         Err(_e) => {
-            error!("failed to open file : {}. Check your .env file entries", document_path);
-            process::exit(0x0100);
+            return None
         },
         Ok(f) => f,
     };
@@ -29,10 +27,10 @@ pub fn get_filename (document_path: &str) -> String {
     for line in contents.lines() {
         if line.starts_with("title: ") {
             let title = line.split("title: ").collect::<Vec<&str>>();
-             return title_to_filename(Path::new(title[1].trim()).to_string_lossy().to_string());
+             return Some(title_to_filename(Path::new(title[1].trim()).to_string_lossy().to_string()));
         }
     };
-    return "no_title".to_string()
+    return None
 }
 
 //-----------------------------------------------------------------------------
@@ -60,13 +58,13 @@ pub fn is_file(path: &str) -> bool {
 }
 
 pub fn mkdir_all (path: &str) {
- if is_file(&path) {
-     let parent_dir = Path::new(&path).parent();
-     match parent_dir {
-         Some(dir) => fs::create_dir_all(dir).expect("failed to create dir"),
-         None => (),
-     }
- } else {
-     fs::create_dir_all(path).expect("failed to create dir");
- }
+    if is_file(&path) {
+         let parent_dir = Path::new(&path).parent();
+         match parent_dir {
+             Some(dir) => fs::create_dir_all(dir).expect("failed to create dir"),
+             None => (),
+         }
+    } else {
+         fs::create_dir_all(path).expect("failed to create dir");
+    }
 }

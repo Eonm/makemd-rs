@@ -1,4 +1,5 @@
 use std::process;
+use std::path::Path;
 
 use crate::bibliography;
 use crate::util;
@@ -17,7 +18,7 @@ pub enum DocumentType {
 //-----------------------------------------------------------------------------
 // EnvData
 //-----------------------------------------------------------------------------
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct EnvData {
     pub md_src: Option<String>,
     pub pdf_dir: Option<String>,
@@ -79,7 +80,7 @@ impl Document {
                 document_type: DocumentType::PRESENTATION,
                 inputs: util::get_input_files(&env_data.presentation_src.clone().unwrap()),
                 output: env_data.presentation_dir.clone().expect("Please give an output Dir"),
-                config: env_data.presentation_config.clone().expect("Please give a cnofiguration file"),
+                config: env_data.presentation_config.clone().expect("Please give a configuration file"),
                 bibliography: bibliography::Bibliography::new(env_data)
             }
         }
@@ -88,6 +89,13 @@ impl Document {
 
 impl Build for Document {
     fn before_build(&self) {
+        match Path::new(&self.config).exists() {
+            false => {
+                eprintln!("Config file {} doesn't exist", &self.config);
+                process::exit(1);
+            }
+            true => ()
+        };
         util::mkdir_all(&self.output);
         self.bibliography.download_bibliography();
         self.bibliography.download_csl_file();
@@ -96,14 +104,14 @@ impl Build for Document {
 
     fn build(&self) {
         self.before_build();
-        let pandoc_config = pandoc::create_pandoc_config(self, &self.config);
+        let pandoc_config = pandoc::create_pandoc_config(self);
         pandoc::pandoc(pandoc_config.to_vec());
     }
 
     fn build_individually (&self) {
         self.before_build();
-        for file in self.inputs.iter() {
-            let pandoc_config = pandoc::create_pandoc_config(self, &file);
+        for _file in self.inputs.iter() {
+            let pandoc_config = pandoc::create_pandoc_config(self);
             pandoc::pandoc(pandoc_config.to_vec());
         }
     }
