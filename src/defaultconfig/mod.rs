@@ -54,7 +54,7 @@ GIT_BOOK_CONFIG=./config/gitbook.yml
 
 fn default_yml_file() -> &'static str {
 r#"---
-title: Your title
+title: Your document title
 author: Your name
 bibliography: #
 csl: #

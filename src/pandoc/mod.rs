@@ -36,8 +36,8 @@ fn file_output_name(data: &Document, input: &str) -> String {
 }
 
 pub fn create_pandoc_args(data: &Document, input: &str, extra_args:Option<Vec<&str>>) -> Vec<String> {
-    let mut config = vec!();
-    config.append(&mut vec!("-N", "-s"));
+    let mut config :Vec<&str> = vec!();
+    config.append(&mut vec!("-s"));
 
     if input.ends_with(".yml") {
         config.append(&mut data.inputs.iter().filter(|input| input.ends_with(".md")).map(|x| x.as_ref()).collect());

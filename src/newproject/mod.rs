@@ -6,8 +6,6 @@ use std::io;
 use std::process;
 
 pub fn init_project() {
-    dotenv::dotenv().expect("Failed to read .makemd file");
-    let env_data = envy::from_env::<EnvData>().expect("failed to parse .makemd file");
 
     let home_dir = env::home_dir().expect("failed to get Home Dir");
     let defaultconfig_path = home_dir.join(".makemd");
@@ -19,6 +17,8 @@ pub fn init_project() {
         }
         _ => ()
     }
+    dotenv::dotenv().expect("Failed to read .makemd file");
+    let env_data = envy::from_env::<EnvData>().expect("failed to parse .makemd file");
 
     match scaffold_config_dirs(env_data.clone()) {
         Err(err) => {
