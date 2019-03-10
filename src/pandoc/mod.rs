@@ -92,7 +92,7 @@ mod tests {
             }
         };
         let pandoc_args = create_pandoc_args(&document_struct, &document_struct.config, None);
-        assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
+        assert_eq!(pandoc_args, vec!("-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
     }
 
     #[test]
@@ -115,7 +115,7 @@ mod tests {
             }
         };
         let pandoc_args = create_pandoc_args(&document_struct, &document_struct.config, None);
-        assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf", "--filter", "pandoc-citeproc", "--bibliography", "bib.bib", "--csl", "style.bib"))
+        assert_eq!(pandoc_args, vec!("-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf", "--filter", "pandoc-citeproc", "--bibliography", "bib.bib", "--csl", "style.bib"))
     }
 
     #[test]
@@ -138,7 +138,7 @@ mod tests {
             }
         };
         let pandoc_args = create_pandoc_args(&document_struct, &document_struct.config, None);
-        assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
+        assert_eq!(pandoc_args, vec!("-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
     }
 
     #[test]
@@ -161,7 +161,7 @@ mod tests {
             }
         };
         let pandoc_args = create_pandoc_args(&document_struct, &document_struct.config, None);
-        assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
+        assert_eq!(pandoc_args, vec!("-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf"))
     }
 
     #[test]
@@ -185,6 +185,6 @@ mod tests {
         };
         let extra_args = Some(vec!("extra", "args"));
         let pandoc_args = create_pandoc_args(&document_struct, &document_struct.config, extra_args);
-        assert_eq!(pandoc_args, vec!("-N", "-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf", "extra", "args", "--filter", "pandoc-citeproc", "--bibliography", "bib.bib", "--csl", "style.bib"))
+        assert_eq!(pandoc_args, vec!("-s", "md.md", "pdf.yml", "-o", "pdf/no_filename.pdf", "extra", "args", "--filter", "pandoc-citeproc", "--bibliography", "bib.bib", "--csl", "style.bib"))
     }
 }
