@@ -1,6 +1,7 @@
 # MakeMD (CLI)
 
-[![Build Status](https://travis-ci.org/Eonm/makemd-rs.svg?branch=master)](https://travis-ci.org/Eonm/makemd-rs)
+
+![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg) [![Build Status](https://travis-ci.org/Eonm/makemd-rs.svg?branch=master)](https://travis-ci.org/Eonm/makemd-rs)
 
 Build and lint your academic markdown documents with Pandoc and Zotero.
 
