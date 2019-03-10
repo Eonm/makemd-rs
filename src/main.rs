@@ -28,7 +28,7 @@ fn main() {
     env_logger::init();
 
     let matches = App::new("MakeMD")
-                          .version("0.1.0")
+                          .version("0.1.2")
                           .author("Eonm <eon.mathis@gmail.com>")
                           .about("Build document with pandoc")
                           .subcommand(SubCommand::with_name("build")
