@@ -1,34 +1,32 @@
 extern crate reqwest;
 extern crate tempdir;
 
-use std::path::Path;
-use std::io::copy;
-use std::fs::File;
-use tempdir::TempDir;
 use std::fs;
+use std::fs::File;
+use std::io::copy;
+use std::path::Path;
 use std::process;
+use tempdir::TempDir;
 
-pub fn download(url:&str, filename:&str, api_key:Option<&str>) -> Result<(),reqwest::Response>{
+pub fn download(url: &str, filename: &str, api_key: Option<&str>) -> Result<(), reqwest::Response> {
     let tmp_dir = TempDir::new("example").expect("Failed to create a temp dir");
     let target = url;
 
     let client = reqwest::Client::new();
 
     let raw_response = match api_key {
-        Some(key) => {
-         client.get(target).header("Zotero-API-Key", key).send()
-        },
-        None => client.get(target).send()
+        Some(key) => client.get(target).header("Zotero-API-Key", key).send(),
+        None => client.get(target).send(),
     };
 
     let mut response = match raw_response {
         Ok(resp) => {
             if !&resp.status().is_success() {
-                return Err(resp)
+                return Err(resp);
             } else {
                 resp
             }
-        },
+        }
         Err(e) => {
             eprintln!("Failed to download file : {}", e);
             process::exit(1)
@@ -52,7 +50,11 @@ pub fn download(url:&str, filename:&str, api_key:Option<&str>) -> Result<(),reqw
     Ok(())
 }
 
-pub fn download_dont_replace(url:&str, filename:&str, api_key:Option<&str>) -> Result <(),reqwest::Response> {
+pub fn download_dont_replace(
+    url: &str,
+    filename: &str,
+    api_key: Option<&str>,
+) -> Result<(), reqwest::Response> {
     if !Path::new(filename).exists() {
         download(url, filename, api_key)
     } else {

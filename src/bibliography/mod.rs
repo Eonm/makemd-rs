@@ -1,6 +1,6 @@
-use crate::util;
-use crate::download;
 use crate::build::EnvData;
+use crate::download;
+use crate::util;
 use std::process;
 
 use std::path::Path;
@@ -17,11 +17,11 @@ pub struct Bibliography {
     pub z_group_id: Option<String>,
     pub z_api_key: Option<String>,
     pub z_collection: Option<String>,
-    pub z_group_collection: Option<String>
+    pub z_group_collection: Option<String>,
 }
 
 impl Bibliography {
-    pub fn new (env_data: EnvData) -> Bibliography {
+    pub fn new(env_data: EnvData) -> Bibliography {
         let bib = Bibliography {
             csl_file: env_data.csl_file,
             csl_style: env_data.csl_style,
@@ -31,7 +31,7 @@ impl Bibliography {
             z_group_id: env_data.z_group_id,
             z_api_key: env_data.z_api_key,
             z_collection: env_data.z_collection,
-            z_group_collection: env_data.z_group_collection
+            z_group_collection: env_data.z_group_collection,
         };
 
         match &bib.csl_file {
@@ -54,13 +54,13 @@ impl Bibliography {
                 let result = download::download(&url, &csl_file, None);
                 match result {
                     Err(mut e) => parse_csl_error(&mut e),
-                    Ok(()) => ()
+                    Ok(()) => (),
                 }
-            },
+            }
             _ => {
                 eprintln!("Not enough data to download your .csl file. Check your .makemd file");
                 process::exit(1)
-            },
+            }
         }
     }
 
@@ -71,7 +71,7 @@ impl Bibliography {
                     &self.download_csl_file_force();
                 }
             }
-            None => ()
+            None => (),
         }
     }
 
@@ -89,14 +89,14 @@ impl Bibliography {
 
                 let result = match &self.z_api_key {
                     Some(key) => download::download(&url, &destination, Some(key)),
-                    None => download::download(&url, &destination, None)
+                    None => download::download(&url, &destination, None),
                 };
 
                 match result {
                     Ok(_) => (),
                     Err(mut e) => zotero::check_zotero_api_error(&mut e),
                 }
-            },
+            }
             None => {
                 eprintln!("Not enough data to download your .bib file. Check your .makemd file");
                 process::exit(1)
@@ -104,13 +104,13 @@ impl Bibliography {
         }
     }
 
-    pub fn download_bibliography (&self) {
+    pub fn download_bibliography(&self) {
         match &self.bib_dest {
             Some(bib_dest) => {
                 if !Path::new(bib_dest).exists() {
                     &self.download_bibliography_force();
                 }
-            },
+            }
             None => (),
         }
     }
@@ -119,16 +119,21 @@ impl Bibliography {
         match (&self.bib_dest, &self.csl_file) {
             (Some(bib), Some(csl)) => {
                 let mut config = vec![];
-                config.append(&mut vec!["--filter", "pandoc-citeproc", "--bibliography", bib.as_ref()]);
+                config.append(&mut vec![
+                    "--filter",
+                    "pandoc-citeproc",
+                    "--bibliography",
+                    bib.as_ref(),
+                ]);
                 config.append(&mut vec!["--csl", csl.as_ref()]);
                 Some(config)
-            },
-            _ => None
+            }
+            _ => None,
         }
     }
 }
 
-pub fn parse_csl_error (response: &mut reqwest::Response) {
+pub fn parse_csl_error(response: &mut reqwest::Response) {
     let text = response.text().unwrap();
     match text.as_ref() {
         "404: Not Found\n" => {

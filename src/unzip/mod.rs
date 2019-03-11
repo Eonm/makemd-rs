@@ -4,8 +4,7 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-
-pub fn unzip(path: &str, dest:&str) {
+pub fn unzip(path: &str, dest: &str) {
     let fname = std::path::Path::new(&*path);
     let file = fs::File::open(&fname).unwrap();
 
@@ -17,8 +16,7 @@ pub fn unzip(path: &str, dest:&str) {
 
         {
             let comment = file.comment();
-            if !comment.is_empty() {
-            }
+            if !comment.is_empty() {}
         }
 
         if (&*file.name()).ends_with('/') {

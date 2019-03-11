@@ -1,8 +1,8 @@
 use crate::file_system;
 use std::env;
 use std::fs;
-use std::process;
 use std::io;
+use std::process;
 
 pub fn set_default_config() {
     let defaultconfig_path = env::home_dir().expect("Failed to get Home Dir");
@@ -11,7 +11,7 @@ pub fn set_default_config() {
             eprintln!("Failed to create config dir : {}", err);
             process::exit(1)
         }
-        _ => ()
+        _ => (),
     };
 
     match populate_default_env_file(&defaultconfig_path) {
@@ -19,7 +19,7 @@ pub fn set_default_config() {
             eprintln!("Failed to populate default .makemd file : {}", err);
             process::exit(1)
         }
-        _ => ()
+        _ => (),
     }
 
     match create_template_dir(&defaultconfig_path) {
@@ -27,7 +27,7 @@ pub fn set_default_config() {
             eprintln!("Failed to create default template dir : {}", err);
             process::exit(1)
         }
-        _ => ()
+        _ => (),
     }
 
     match populate_templates(&defaultconfig_path) {
@@ -35,12 +35,12 @@ pub fn set_default_config() {
             eprintln!("Failed to populate default templates : {}", err);
             process::exit(1)
         }
-        _ => ()
+        _ => (),
     }
 }
 
 fn default_env_file() -> &'static str {
-r#"MD_SRC=./md/
+    r#"MD_SRC=./md/
 PDF_DIR=./pdf/
 PRESENTATION_SRC=./md/
 PRESENTATION_DIR=./presentation/
@@ -53,7 +53,7 @@ GIT_BOOK_CONFIG=./config/gitbook.yml
 }
 
 fn default_yml_file() -> &'static str {
-r#"---
+    r#"---
 title: Your document title
 author: Your name
 bibliography: #
@@ -74,7 +74,7 @@ fn populate_default_env_file(home_dir: &std::path::PathBuf) -> Result<(), io::Er
 }
 
 fn populate_templates(home_dir: &std::path::PathBuf) -> Result<(), io::Error> {
-    let template_list: Vec<&str> =  vec!("PDF_CONFIG", "GIT_BOOK_CONFIG", "PRESENTATION_CONFIG");
+    let template_list: Vec<&str> = vec!["PDF_CONFIG", "GIT_BOOK_CONFIG", "PRESENTATION_CONFIG"];
 
     for template in template_list {
         let template_path = home_dir.join(".makemd/templates").join(template);
