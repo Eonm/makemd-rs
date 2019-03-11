@@ -17,7 +17,7 @@ pub fn init_project() {
         }
         _ => ()
     }
-    dotenv::dotenv().expect("Failed to read .makemd file");
+    dotenv::from_filename(".makemd").expect("Failed to read .makemd file");
     let env_data = envy::from_env::<EnvData>().expect("failed to parse .makemd file");
 
     match scaffold_config_dirs(env_data.clone()) {
